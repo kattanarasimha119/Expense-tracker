@@ -1,0 +1,143 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class ExpenseTracker {
+    private List<User> users;
+    private List<Expense> expenses;
+    private User currentUser;
+
+    public ExpenseTracker() {
+        users = new ArrayList<>();
+        expenses = new ArrayList<>();
+        loadUsers();
+        loadExpenses();
+    }
+
+    // User Registration
+    public void registerUser(String username, String password) {
+        users.add(new User(username, password));
+        saveUsers();
+    }
+
+    // User Login
+    public boolean loginUser(String username, String password) {
+        for (User user : users) {
+            if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
+                currentUser = user;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Add Expense
+    public void addExpense(Date date, String category, double amount) {
+        expenses.add(new Expense(date, category, amount));
+        saveExpenses();
+    }
+
+    // List Expenses
+    public List<Expense> listExpenses() {
+        return expenses;
+    }
+
+    // Save Users to File
+    private void saveUsers() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("users.dat"))) {
+            oos.writeObject(users);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Users from File
+    private void loadUsers() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("users.dat"))) {
+            users = (List<User>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            // Ignore if file not found
+        }
+    }
+
+    // Save Expenses to File
+    private void saveExpenses() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("expenses.dat"))) {
+            oos.writeObject(expenses);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Expenses from File
+    private void loadExpenses() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("expenses.dat"))) {
+            expenses = (List<Expense>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            // Ignore if file not found
+        }
+    }
+
+    public static void main(String[] args) {
+        ExpenseTracker tracker = new ExpenseTracker();
+        Scanner scanner = new Scanner(System.in);
+        
+        // Simplified command-line interaction for demonstration
+        while (true) {
+            System.out.println("1. Register");
+            System.out.println("2. Login");
+            System.out.println("3. Add Expense");
+            System.out.println("4. List Expenses");
+            System.out.println("5. Exit");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+            
+            switch (choice) {
+                case 1:
+                    System.out.println("Enter username:");
+                    String username = scanner.nextLine();
+                    System.out.println("Enter password:");
+                    String password = scanner.nextLine();
+                    tracker.registerUser(username, password);
+                    break;
+                case 2:
+                    System.out.println("Enter username:");
+                    username = scanner.nextLine();
+                    System.out.println("Enter password:");
+                    password = scanner.nextLine();
+                    if (tracker.loginUser(username, password)) {
+                        System.out.println("Login successful");
+                    } else {
+                        System.out.println("Invalid credentials");
+                    }
+                    break;
+                case 3:
+                    System.out.println("Enter date (yyyy-mm-dd):");
+                    String dateStr = scanner.nextLine();
+                    System.out.println("Enter category:");
+                    String category = scanner.nextLine();
+                    System.out.println("Enter amount:");
+                    double amount = scanner.nextDouble();
+                    scanner.nextLine(); // consume newline
+                    try {
+                        Date date = java.sql.Date.valueOf(dateStr);
+                        tracker.addExpense(date, category, amount);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid date format");
+                    }
+                    break;
+                case 4:
+                    List<Expense> expenses = tracker.listExpenses();
+                    for (Expense expense : expenses) {
+                        System.out.println(expense);
+                    }
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Invalid choice");
+            }
+        }
+    }
+}
